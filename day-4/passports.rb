@@ -21,17 +21,16 @@ def valid_field?(field, value)
   end
 end
 
-passports = ARGF.read.split("\n\n").map { |lines| lines.gsub("\n", " ").strip }
+passports = ARGF.read.split("\n\n").map do |raw_passport|
+  raw_passport.scan(/(\w+{3})\:(\S+)/).to_h
+end
 
 passports_with_required_fields = passports.select do |passport|
-  REQUIRED_FIELDS.all? { |field| passport.include?(field) }
+  REQUIRED_FIELDS.all? { |field| passport.key?(field) }
 end
 
 required_and_valid_count = passports_with_required_fields.count do |passport|
-  passport.split(" ").all? do |field_value|
-    field, value = field_value.split(":")
-    valid_field?(field, value)
-  end
+  passport.all? { |field, value| valid_field?(field, value) }
 end
 
 puts "Part 1:", passports_with_required_fields.count
