@@ -21,9 +21,7 @@ def valid_field?(field, value)
   end
 end
 
-passports = ARGF
-  .slice_when { |_, after| after == "\n" }
-  .map { |lines| lines.join.gsub("\n", " ").strip }
+passports = ARGF.read.split("\n\n").map { |lines| lines.gsub("\n", " ").strip }
 
 passports_with_required_fields = passports.select do |passport|
   REQUIRED_FIELDS.all? { |field| passport.include?(field) }
