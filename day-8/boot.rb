@@ -1,29 +1,31 @@
-Instruction = Struct.new(:type, :value, :invocations, :index, keyword_init: true)
+require "set"
+
+Instruction = Struct.new(:type, :value, :index, keyword_init: true)
 
 original_instructions = ARGF.map.with_index do |raw_instruction, index|
   type, raw_value = raw_instruction.split(" ")
-  Instruction.new(type: type, value: raw_value.to_i, index: index, invocations: 0)
+  Instruction.new(type: type, value: raw_value.to_i, index: index)
 end
 
 def execute(instructions)
-  instructions = instructions.map(&:dup)
+  visited_instructions = Set.new
   last_index = instructions.size - 1
   accumulator = 0
-  next_index = 0
+  pointer = 0
 
-  while current_instruction = instructions[next_index]
-    if current_instruction.invocations == 1
+  while current_instruction = instructions[pointer]
+    if visited_instructions.include?(current_instruction)
       return [:looped, accumulator]
     end
 
-    current_instruction.invocations += 1
-    next_index = current_instruction.index + 1
+    visited_instructions << current_instruction
+    pointer = current_instruction.index + 1
 
     case current_instruction.type
     when "acc"
       accumulator += current_instruction.value
     when "jmp"
-      next_index = current_instruction.index + current_instruction.value
+      pointer = current_instruction.index + current_instruction.value
     end
 
     if current_instruction.index == last_index
@@ -43,7 +45,7 @@ mutants = original_instructions.map do |instruction|
 end.compact
 
 mutants.detect do |mutant|
-  revised_instructions = original_instructions.map(&:dup)
+  revised_instructions = original_instructions.dup
   revised_instructions[mutant.index] = mutant
   halt_reason, value = execute(revised_instructions)
 
