@@ -9,7 +9,6 @@ end
 
 def execute(instructions)
   visited_instructions = Set.new
-  last_index = instructions.size - 1
   accumulator = 0
   pointer = 0
 
@@ -28,7 +27,7 @@ def execute(instructions)
       pointer = current_instruction.index + current_instruction.value
     end
 
-    if current_instruction.index == last_index
+    if current_instruction == instructions.last
       return [:finished, accumulator]
     end
   end
