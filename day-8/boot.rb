@@ -5,8 +5,9 @@ original_instructions = ARGF.map.with_index do |raw_instruction, index|
   Instruction.new(type: type, value: raw_value.to_i, index: index, invocations: 0)
 end
 
-def run_instructions(instructions)
+def execute(instructions)
   instructions = instructions.map(&:dup)
+  last_index = instructions.size - 1
   accumulator = 0
   next_index = 0
 
@@ -25,30 +26,29 @@ def run_instructions(instructions)
       next_index = current_instruction.index + current_instruction.value
     end
 
-    if current_instruction.index == (instructions.size - 1)
+    if current_instruction.index == last_index
       return [:finished, accumulator]
     end
   end
 end
 
-puts "Part 1:", run_instructions(original_instructions).last
+puts "Part 1:", execute(original_instructions).last
+
+TYPE_MUTATIONS = { "jmp" => "nop", "nop" => "jmp" }
 
 mutants = original_instructions.map do |instruction|
-  if instruction.type == "jmp"
-    instruction.dup.tap { |mutant| mutant.type = "nop" }
-  elsif instruction.type == "nop"
-    instruction.dup.tap { |mutant| mutant.type = "jmp" }
+  if (mutation = TYPE_MUTATIONS[instruction.type])
+    instruction.dup.tap { |mutant| mutant.type = mutation }
   end
 end.compact
 
 mutants.detect do |mutant|
   revised_instructions = original_instructions.map(&:dup)
   revised_instructions[mutant.index] = mutant
+  halt_reason, value = execute(revised_instructions)
 
-  stop_reason, value = run_instructions(revised_instructions)
-
-  if stop_reason == :finished
-    puts "Part 2", value
+  if halt_reason == :finished
+    puts "Part 2:", value
     true
   end
 end
