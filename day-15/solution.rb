@@ -1,7 +1,7 @@
 spoken = Hash.new { |hash, key| hash[key] = [] }
 
-ARGV.first.split(",").each.with_index(1) do |value, index|
-  spoken[value.to_i] << index
+ARGV.first.split(",").each.with_index(1) do |value, round|
+  spoken[value.to_i] << round
 end
 
 max_rounds = ARGV.last.to_i
