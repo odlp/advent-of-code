@@ -8,12 +8,8 @@ max_rounds = ARGV.last.to_i
 last_spoken = spoken.keys.last
 
 (spoken.size + 1).upto(max_rounds) do |round|
-  last_spoken = if spoken[last_spoken].size == 1
-    0
-  else
-    spoken[last_spoken][-1] - spoken[last_spoken][-2]
-  end
-
+  first_time = spoken[last_spoken].size == 1
+  last_spoken = first_time ? 0 : (spoken[last_spoken][-1] - spoken[last_spoken][-2])
   spoken[last_spoken] << round
 end
 
