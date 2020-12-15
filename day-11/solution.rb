@@ -1,42 +1,37 @@
 FLOOR = "."
 EMPTY_SEAT = "L"
 OCCUPIED_SEAT = "#"
+DIRECTIONS = [-1, 0, 1].product([-1, 0, 1]) - [[0, 0]]
 
 seats = ARGF.each_line(chomp: true).map { |row| row.chars }
 
-def adjacent_seats(seats:, seat_x:, seat_y:, adjacent_depth:)
+def adjacent_seats(seats:, seat_x:, seat_y:, adjacent_distance:)
   Enumerator.new do |yielder|
-    [
-      [-1, -1], [0, -1], [1, -1],
-      [-1, 0],           [1, 0],
-      [-1, 1],  [0, 1],  [1, 1],
-    ].each do |offset_x, offset_y|
-      1.upto(adjacent_depth) do |n|
-        x = (offset_x * n) + seat_x
-        y = (offset_y * n) + seat_y
+    DIRECTIONS.each do |offset_x, offset_y|
+      1.upto(adjacent_distance) do |distance|
+        x = (offset_x * distance) + seat_x
+        y = (offset_y * distance) + seat_y
 
-        if y >= 0 && row = seats[y]
-          if x >= 0 && space = row[x]
-            if space != FLOOR
-              yielder << space
-              break
-            end
-          end
+        break if y.negative? || seats[y].nil?
+        break if x.negative? || seats[y][x].nil?
+
+        if (space = seats[y][x]) != FLOOR
+          break yielder << space
         end
       end
     end
   end
 end
 
-def perform_iteration(seats, occupied_threshold:, adjacent_depth:)
+def perform_iteration(seats:, occupied_threshold:, adjacent_distance:)
   changes = []
 
   seats.each_with_index do |row, y|
     row.each_with_index do |space, x|
       next if space == FLOOR
 
-      occupied_count = adjacent_seats(seats: seats, seat_x: x, seat_y: y, adjacent_depth: adjacent_depth)
-        .count { |seat| seat == OCCUPIED_SEAT }
+      occupied_count = adjacent_seats(seats: seats, seat_x: x, seat_y: y, adjacent_distance: adjacent_distance)
+        .count(OCCUPIED_SEAT)
 
       if space == EMPTY_SEAT && occupied_count == 0
         changes << { x: x, y: y, value: OCCUPIED_SEAT }
@@ -53,18 +48,16 @@ def perform_iteration(seats, occupied_threshold:, adjacent_depth:)
   end
 end
 
-def solve_until_no_changes(seats, occupied_threshold:, adjacent_depth:)
-  count = 0
-  prev_count = -1
+def solve_until_no_changes(seats:, occupied_threshold:, adjacent_distance:)
+  prev_count, count = -1, 0
 
   until count == prev_count do
-    perform_iteration(seats, occupied_threshold: occupied_threshold, adjacent_depth: adjacent_depth)
-    prev_count = count
-    count = seats.flatten.count { |seat| seat == OCCUPIED_SEAT }
+    perform_iteration(seats: seats, occupied_threshold: occupied_threshold, adjacent_distance: adjacent_distance)
+    prev_count, count = count, seats.flatten.count(OCCUPIED_SEAT)
   end
 
   count
 end
 
-puts "Part 1:", solve_until_no_changes(seats.dup, occupied_threshold: 4, adjacent_depth: 1)
-puts "Part 2:", solve_until_no_changes(seats.dup, occupied_threshold: 5, adjacent_depth: seats.size)
+puts "Part 1:", solve_until_no_changes(seats: seats.dup, occupied_threshold: 4, adjacent_distance: 1)
+puts "Part 2:", solve_until_no_changes(seats: seats.dup, occupied_threshold: 5, adjacent_distance: seats.size)
