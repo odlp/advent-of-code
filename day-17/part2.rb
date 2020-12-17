@@ -1,13 +1,13 @@
 ACTIVE = "#"
 INACTIVE = "."
 DIRECTIONS = [-1, 0, 1]
-ALL_DIRECTIONS = DIRECTIONS.product(DIRECTIONS, DIRECTIONS)
+ALL_DIRECTIONS = DIRECTIONS.product(DIRECTIONS, DIRECTIONS, DIRECTIONS)
 
-Cube = Struct.new(:x, :y, :z, keyword_init: true) do
+Cube = Struct.new(:x, :y, :z, :w, keyword_init: true) do
   def neighbours
     @neighbours ||= begin
-      all = ALL_DIRECTIONS.map do |offset_x, offset_y, offset_z|
-        Cube.new(x: x + offset_x, y: y + offset_y, z: z + offset_z)
+      all = ALL_DIRECTIONS.map do |offset_x, offset_y, offset_z, offset_w|
+        Cube.new(x: x + offset_x, y: y + offset_y, z: z + offset_z, w: w + offset_w)
       end
 
       all - [self]
@@ -17,7 +17,7 @@ end
 
 grid = ARGF.flat_map.with_index do |line, y|
   line.chomp.chars.map.with_index do |state, x|
-    [Cube.new(x: x, y: y, z: 0), state]
+    [Cube.new(x: x, y: y, z: 0, w: 0), state]
   end
 end.to_h
 
@@ -44,4 +44,4 @@ end.to_h
   grid.merge!(changes)
 end
 
-puts "Part 1:", grid.values.count(ACTIVE)
+puts "Part 2:", grid.values.count(ACTIVE)
